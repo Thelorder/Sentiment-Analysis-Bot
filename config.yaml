@@ -1,0 +1,10 @@
+api_config:
+  active_model: "roberta"  # Options: "vader", "textblob", "roberta"
+  
+model_config:
+  vader:
+    threshold: 0.05
+  textblob:
+    polarity_threshold: 0.0
+  roberta:
+    model_name: "cardiffnlp/twitter-roberta-base-sentiment"
