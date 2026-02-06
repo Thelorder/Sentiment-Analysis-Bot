@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+streamlit
+pandas
+matplotlib
+nltk
+textblob
+pyyaml
+pytest
+pytest-cov
+pylint
+mypy
