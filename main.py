@@ -31,5 +31,6 @@ print("="*30)
 # 5. Show detailed comparison
 print("\nDetailed Results (Actual vs Predicted):")
 for index, row in sample_df.iterrows():
-    status = "✅" if row['sentiment'] == row['prediction'] else "❌"
+    status = "Yup" if row['sentiment'] == row['prediction'] else "Nope"
+
     print(f"{status} Actual: {row['sentiment']} | Pred: {row['prediction']} | Text: {row['clean_text'][:70]}...")
