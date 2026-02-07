@@ -13,8 +13,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 class SentimentModel:
     """Manager class for various sentiment analysis pre-trained models."""
 
-    def __init__(self, config_path: str = "config.yaml") -> None:
+    def __init__(self, config_path: str = None) -> None:
         """Initializes the model based on the configuration file."""
+        if config_path is None:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(base_dir, "config.yaml")
+            
         self.config: Dict[str, Any] = self.load_config(path=config_path)
         self.active_name: str = self.config['api_config']['active_model']
         self.model: Any = None
@@ -26,9 +30,15 @@ class SentimentModel:
         try:
             with open(path, "r", encoding="utf-8") as file:
                 return yaml.safe_load(file)
-        except FileNotFoundError:
-            return {"api_config": {"active_model": "vader"},
-                    "model_config": {"vader": {"threshold": 0.05}}}
+        except (FileNotFoundError, KeyError):
+            return {
+                "api_config": {"active_model": "vader"},
+                "model_config": {
+                    "vader": {"threshold": 0.05},
+                    "textblob": {"polarity_threshold": 0.0},
+                    "roberta": {"model_name": "cardiffnlp/twitter-roberta-base-sentiment"}
+                }
+            }
 
     def initialize_model(self, model_name: str) -> None:
         """Sets up the specific model engine and thresholds."""
@@ -61,3 +71,4 @@ class SentimentModel:
 
 
         return "neutral"
+
