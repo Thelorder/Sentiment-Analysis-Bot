@@ -26,10 +26,9 @@ def predict(request: SentimentRequest) -> Dict[str, Any]:
     """
     prediction = sentiment_engine.predict(request.text)
     
-    # Simple confidence logic for the demo
     confidence = 100.0
     if sentiment_engine.active_name == "roberta":
-        confidence = 85.0  # Placeholder if library is mocked
+        confidence = 85.0  
         
     return {
         "sentiment": prediction,
@@ -45,4 +44,3 @@ def compare_all(text: str) -> Dict[str, Any]:
         "vader": sentiment_engine.predict(text),
         "model_used": sentiment_engine.active_name
     }
-    
