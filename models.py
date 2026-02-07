@@ -39,7 +39,6 @@ class SentimentModel:
             self.threshold = self.config['model_config']['textblob']['polarity_threshold']
         elif model_name == "roberta":
             try:
-                # pylint: disable=import-outside-toplevel
                 from transformers import pipeline
                 model_id = self.config['model_config']['roberta']['model_name']
                 self.model = pipeline("sentiment-analysis", model=model_id, framework="pt")
@@ -59,5 +58,6 @@ class SentimentModel:
         if self.active_name == "roberta" and self.model:
             result = self.model(text)[0]
             return "positive" if result['label'] == "LABEL_2" else "negative"
+
 
         return "neutral"
