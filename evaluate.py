@@ -4,8 +4,10 @@ from models import SentimentModel
 from typing import Dict
 
 def run_evaluator(sample_size: int = 100) -> Dict[str,float]:
+    
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    DATASET_PATH = r"C:\Users\User\Desktop\Python Code\kaggle_data\datasets\kazanova\sentiment140\versions\2\twitterTraining.csv"
+    DATASET_PATH = os.path.join(BASE_DIR, "twitterTraining.csv")
     df = pd.read_csv(DATASET_PATH, encoding='latin-1', 
                      header=None, 
                      names=['sentiment', 'id', 'date', 'query', 'user', 'text'])
@@ -46,4 +48,5 @@ def plot_results(results: Dict[str,float]) -> None:
 
 if __name__ == "__main__":
     scores = run_evaluator(10)
+
     plot_results(scores)
