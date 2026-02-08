@@ -4,7 +4,7 @@ from models import SentimentModel
 from typing import Dict
 import os
 
-def run_evaluator(sample_size: int = 100) -> Dict[str, float]:
+def run_evaluator(sample_size: int = 500) -> Dict[str, float]:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATASET_PATH = os.path.join(BASE_DIR, "twitterTraining.csv")
 
@@ -47,4 +47,5 @@ def plot_results(results: Dict[str,float]) -> None:
 
 if __name__ == "__main__":
     scores = run_evaluator(10)
+
     plot_results(scores)
