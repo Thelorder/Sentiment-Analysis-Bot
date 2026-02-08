@@ -56,7 +56,7 @@ st.markdown("""
 Compare **VADER**, **TextBlob**, and **RoBERTa** in real-time.
 """)
 
-# Initialize Lexicon models locally
+
 vader_analyzer = SentimentIntensityAnalyzer()
 
 # UI Input
@@ -72,22 +72,27 @@ if st.button("Analyze"):
         else:
             with st.spinner('AI Models are competing...'):
                 try:
-                    response = requests.post(API_URL, json={"text": tweet_input}, timeout=15)
+                    # RoBERTa via API 
+                    response = requests.post(
+                        API_URL, 
+                        json={"text": tweet_input, "model": "roberta"}, 
+                        timeout=15
+                    )
 
                     if response.status_code == 200:
                         res = response.json()
                         r_label: str = res['sentiment'].capitalize()
-                        r_conf: str = f"{res.get('confidence', 'N/A')}%"
+                        r_conf: str = f"{res.get('confidence', 0)}%"
                     else:
                         st.error(f"API Error: Status {response.status_code}")
                         st.stop()
 
-                    # VADER Local
+                    # VADER 
                     v_scores = vader_analyzer.polarity_scores(tweet_input)
                     v_label: str = "Positive" if v_scores['compound'] >= 0.05 else "Negative"
                     v_conf: str = f"{abs(v_scores['compound']) * 100:.1f}%"
 
-                    # TextBlob Local
+                    # TextBlob 
                     t_pol = TextBlob(tweet_input).sentiment.polarity
                     t_label: str = "Positive" if t_pol > 0 else "Negative"
                     t_conf: str = f"{abs(t_pol) * 100:.1f}%"
@@ -123,7 +128,12 @@ if st.button("Analyze"):
 
         with st.spinner(f'Querying API for {mode}...'):
             try:
-                res_raw = requests.post(API_URL, json={"text": tweet_input}, timeout=15)
+
+                res_raw = requests.post(
+                    API_URL, 
+                    json={"text": tweet_input, "model": active_key},
+                    timeout=30
+                )
                 res = res_raw.json()
                 
                 res_col1, res_col2 = st.columns(2)
@@ -133,4 +143,3 @@ if st.button("Analyze"):
                 st.error("Could not connect to the API. Ensure api.py is running.")
             except Exception as e:
                 st.error(f"Processing error: {e}")
-
