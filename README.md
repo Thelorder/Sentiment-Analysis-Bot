@@ -1,39 +1,93 @@
-Twitter Sentiment Analysis Project
+# Twitter Sentiment Analysis Project
 
-This project provides a sentiment analysis system using VADER, TextBlob, and RoBERTa models. It consists of a FastAPI backend and a Streamlit frontend.
-Installation and Setup
+This project provides a real-time sentiment analysis system comparing three popular models:
 
-pip install -r requirements.txt
+- **VADER** (rule-based, lexicon + heuristics)
+- **TextBlob** (simple pattern-based)
+- **RoBERTa** (transformer-based, twitter-roberta-base-sentiment)
 
-Download necessary model data for local lexicon engines:
-Bash
+It includes:
+- A **FastAPI** backend for model inference and model comparison ("AI Battle")
+- A **Streamlit** frontend for interactive analysis
+- Basic evaluation/benchmarking on a subset of the Sentiment140 dataset
 
+## Features
+
+- Single-model prediction endpoint (`/predict`)
+- Multi-model comparison endpoint (`/compare`)
+- Interactive web interface with real-time "AI Battle" mode
+- Model benchmarking against labeled tweets
+
+## Installation & Setup
+
+1. Clone the repository
+
+git clone <your-repo-url>
+cd TwitterBot   # or whatever your folder is named
+
+2. Install dependencies
+pip install -r requirements.txt 
+
+Note: For roberta you will alsow need 
+pip install transformers torch
+
+3. Download required NLTK data (only VADER needs it)
 python -m nltk.downloader vader_lexicon
-python -m textblob.download_corpora
 
-    Note on RoBERTa: The RoBERTa model (twitter-roberta-base-sentiment) is not included in the repository due to its size. Upon first execution or when the model is initialized in models.py, the library will automatically download approximately 500MB of weights from the Hugging Face Hub.
+Important: RoBERTa Model Download
+The RoBERTa model (cardiffnlp/twitter-roberta-base-sentiment) is not included in the repository (≈500–550 MB).
 
-Dataset Information
+When you first set model = "roberta" (via the API or Streamlit UI), or when the default model in config.yaml is "roberta",
+the transformers library will automatically download the model weights and tokenizer from Hugging Face Hub.
+This happens only once — subsequent runs load from local cache (~/.cache/huggingface/hub/).
 
-The evaluation module uses a file named twitterTraining.csv. This is based on the Sentiment140 dataset, a collection of 1.6 million tweets formatted for binary sentiment classification (positive and negative). Ensure this file is placed in the project root directory for the benchmarking features to function.
-Running the Application
+Expect to see a download progress in the terminal wduring the first run.
 
-To use the system, you must run both the API and the App in separate terminal windows.
-1. Start the API (Backend)
+4. Dataset for Benchmarking
+The evaluation script (evaluate.py) uses a file named twitterTraining.csv.
+This should be a copy (or renamed version) of the Sentiment140 dataset:
 
-The backend manages the model logic and serves predictions.
+1.6 million tweets
+Binary sentiment: 0 = negative, 4 = positive
+Columns expected: sentiment, id, date, query, user, text
 
-uvicorn api:app --reload
+How to get it:
 
-2. Start the Streamlit App (Frontend)
+Download from Kaggle:
+https://www.kaggle.com/datasets/kazanova/sentiment140
+(file: training.1600000.processed.noemoticon.csv ≈ 80–240 MB zipped)
+Or from Hugging Face Datasets:
+https://huggingface.co/datasets/stanfordnlp/sentiment140
 
-The frontend provides the user interface for real-time analysis.
+Steps:
+
+Download and unzip
+Rename the file to twitterTraining.csv
+(or change DATASET_PATH in evaluate.py)
+Place it in the project root directory
+
+5. Running the Application
+You need two terminal windows (or use a process manager like concurrently).
+5:1. Start the FastAPI backend
+
 Bash
+uvicorn api:app --reload --port 8000
 
+5:2. Start the Streamlit frontend
+
+Bash
 streamlit run app.py
 
-Testing and Quality
+Open http://localhost:8501 in your browser.
 
-To verify the installation and check code coverage:
+6. Testing & Code Quality
+Run the unit tests:
 
-pytest --cov=. test_sentiment.py
+Bash 
+pytest
+
+Or
+
+Bash
+
+pytest --cov=api --cov=models --cov-branch --cov-report=term-missing
