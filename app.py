@@ -62,7 +62,7 @@ vader_analyzer = SentimentIntensityAnalyzer()
 # UI Input
 tweet_input: str = st.text_area(
     "Enter a tweet to test:",
-    "I absolutely love how this project is coming together!"
+    "I am feelling better and better!"
 )
 
 if st.button("Analyze"):
@@ -143,3 +143,4 @@ if st.button("Analyze"):
                 st.error("Could not connect to the API. Ensure api.py is running.")
             except Exception as e:
                 st.error(f"Processing error: {e}")
+
