@@ -15,7 +15,8 @@ except ImportError:
 
 st.set_page_config(page_title="Twitter AI Battle", layout="wide")
 
-API_URL = "http://127.0.0.1:8000/predict"
+PREDICT_URL = "http://127.0.0.1:8000/predict"
+COMAPRE_URL = "http://127.0.0.1:8000/compare" 
 
 # Sidebar
 st.sidebar.title("Settings")
@@ -32,10 +33,12 @@ st.sidebar.divider()
 st.sidebar.subheader("Model Benchmarking")
 st.sidebar.write("Run accuracy tests on the Sentiment140 dataset.")
 
+sample_size = st.sidebar.slider("Data", 100,1000,500)
+
 if st.sidebar.button("📊 Run Global Benchmark"):
     if run_evaluator:
         with st.spinner("Calculating accuracy for all models..."):
-            results = run_evaluator(sample_size=100)
+            results = run_evaluator(sample_size)
             if results:
                 fig, ax = plt.subplots()
                 names = [n.upper() for n in results.keys()]
@@ -56,7 +59,6 @@ st.markdown("""
 Compare **VADER**, **TextBlob**, and **RoBERTa** in real-time.
 """)
 
-
 vader_analyzer = SentimentIntensityAnalyzer()
 
 # UI Input
@@ -72,45 +74,45 @@ if st.button("Analyze"):
         else:
             with st.spinner('AI Models are competing...'):
                 try:
-                    # RoBERTa via API 
+                    
                     response = requests.post(
-                        API_URL, 
-                        json={"text": tweet_input, "model": "roberta"}, 
-                        timeout=15
+                        COMAPRE_URL,
+                        json={"text":tweet_input},
+                        timeout= 30
                     )
 
                     if response.status_code == 200:
-                        res = response.json()
-                        r_label: str = res['sentiment'].capitalize()
-                        r_conf: str = f"{res.get('confidence', 0)}%"
+                        data = response.json()["results"]
+                        
+                        # RoBERTa
+                        r_label = data.get("roberta", {}).get("sentiment", "N/A").capitalize()
+                        r_conf = f"{data.get('roberta', {}).get('confidence', 0)}%"
+                        
+                        # VADER
+                        v_label = data.get("vader", {}).get("sentiment", "N/A").capitalize()
+                        v_conf = f"{data.get('vader', {}).get('confidence', 0)}%"
+                        
+                        # TextBlob
+                        t_label = data.get("textblob", {}).get("sentiment", "N/A").capitalize()
+                        t_conf = f"{data.get('textblob', {}).get('confidence', 0)}%"
+                        
+                        st.subheader("Final Decision")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("VADER Sentiment", v_label)
+                        c2.metric("TextBlob Sentiment", t_label)
+                        c3.metric("RoBERTa Sentiment", r_label)
+
+                        st.divider()
+
+                        st.subheader("Model Certainty / Intensity")
+                        c4, c5, c6 = st.columns(3)
+                        c4.metric("VADER Score", v_conf, "Rule-based intensity")
+                        c5.metric("TextBlob Score", t_conf, "Pattern-based polarity")
+                        c6.metric("RoBERTa Score", r_conf, "Transformer Confidence")
                     else:
                         st.error(f"API Error: Status {response.status_code}")
                         st.stop()
-
-                    # VADER 
-                    v_scores = vader_analyzer.polarity_scores(tweet_input)
-                    v_label: str = "Positive" if v_scores['compound'] >= 0.05 else "Negative"
-                    v_conf: str = f"{abs(v_scores['compound']) * 100:.1f}%"
-
-                    # TextBlob 
-                    t_pol = TextBlob(tweet_input).sentiment.polarity
-                    t_label: str = "Positive" if t_pol > 0 else "Negative"
-                    t_conf: str = f"{abs(t_pol) * 100:.1f}%"
-
-                    st.subheader("Final Decision")
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("VADER Sentiment", v_label)
-                    c2.metric("TextBlob Sentiment", t_label)
-                    c3.metric("RoBERTa Sentiment", r_label)
-
-                    st.divider()
-
-                    st.subheader("Model Certainty / Intensity")
-                    c4, c5, c6 = st.columns(3)
-                    c4.metric("VADER Score", v_conf, "Rule-based intensity")
-                    c5.metric("TextBlob Score", t_conf, "Pattern-based polarity")
-                    c6.metric("RoBERTa Score", r_conf, "Transformer Confidence")
-
+                            
                 except requests.exceptions.ConnectionError:
                     st.error("❌ **Backend Offline:** The RoBERTa API (api.py) is not running.")
                 except requests.exceptions.Timeout:
@@ -121,7 +123,7 @@ if st.button("Analyze"):
         mapping = {
             "RoBERTa (Transformer)": "roberta",
             "VADER (Lexicon)": "vader",
-            "TextBlob (Pattern)": "textblob"
+            "TextBlob (Pattern)": "textblob",
         }
 
         active_key = mapping[mode]
@@ -130,7 +132,7 @@ if st.button("Analyze"):
             try:
 
                 res_raw = requests.post(
-                    API_URL, 
+                    PREDICT_URL, 
                     json={"text": tweet_input, "model": active_key},
                     timeout=30
                 )
@@ -143,4 +145,3 @@ if st.button("Analyze"):
                 st.error("Could not connect to the API. Ensure api.py is running.")
             except Exception as e:
                 st.error(f"Processing error: {e}")
-

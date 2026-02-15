@@ -2,11 +2,13 @@
 Logic Module for Sentiment Analysis Models.
 """
 import os
+import re
 from typing import Dict, Any
 import yaml
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from textblob import TextBlob
 import nltk 
+from utils import clean_tweet
 
 # Set environment variables
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -80,11 +82,14 @@ class SentimentModel:
     def predict_detailed(self, text: str) -> Dict[str, Any]:
         """Returns label, confidence score, and raw output."""
         
+        cleaned_text = clean_tweet(text)
+        
         # --- VADER Logic ---
         if self.active_name == "vader":
             if not self.model: 
                 self.model = SentimentIntensityAnalyzer()
-            scores = self.model.polarity_scores(text)
+            scores = self.model.polarity_scores(cleaned_text)
+            #scores = self.model.polarity_scores(text)
             compound = scores['compound']
             label = "positive" if compound >= self.threshold else "negative"
             return {
@@ -94,7 +99,8 @@ class SentimentModel:
 
         # --- TextBlob Logic ---
         if self.active_name == "textblob":
-            blob = TextBlob(text)
+            blob = TextBlob(cleaned_text)
+            #blob = TextBlob(text)
             polarity = blob.sentiment.polarity
             label = "positive" if polarity > self.threshold else "negative"
             return {
@@ -114,7 +120,8 @@ class SentimentModel:
             if not self.model:
                 return {"sentiment": "error", "confidence": 0.0}
 
-            results = self.model(text, top_k=None) 
+            results = self.model(cleaned_text, top_k=None) 
+            #results = self.model(text, top_k=None) 
 
             scores = {r['label']: r['score'] for r in results}
 
@@ -133,3 +140,4 @@ class SentimentModel:
                 "sentiment": label, 
                 "confidence": round(conf * 100, 2)
             }
+

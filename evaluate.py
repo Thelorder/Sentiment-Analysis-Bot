@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from models import SentimentModel
 from typing import Dict
 import os
+from utils import clean_tweet
 
 def run_evaluator(sample_size: int = 500) -> Dict[str, float]:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,6 +14,7 @@ def run_evaluator(sample_size: int = 500) -> Dict[str, float]:
                      names=['sentiment', 'id', 'date', 'query', 'user', 'text'])
 
     df = df.sample(sample_size)
+    df['clean_text'] = df['text'].apply(clean_tweet)
     df['actual'] = df['sentiment'].map({4: 'positive', 0: 'negative'})
     
     results = {"vader": 0.0, "textblob": 0.0, "roberta": 0.0}
@@ -34,7 +36,7 @@ def run_evaluator(sample_size: int = 500) -> Dict[str, float]:
     return results
 
 def plot_results(results: Dict[str,float]) -> None:
-    names = [n.upper() for n in results.keys()]
+    names = [n.upper() for n in results.keys()] # list comprehenshion 
     values = list(results.values())
 
     plt.figure(figsize=(10, 6))
@@ -44,8 +46,13 @@ def plot_results(results: Dict[str,float]) -> None:
     plt.ylim(0, 100)
     plt.savefig('evaluation_chart.png')
     print("Chart saved as evaluation_chart.png")
+    
+def save_evaluation_chart(results:Dict[str,float]) -> None:
+    fig = plot_results(results)
+    fig.savefig('evaluation_chart.png')
+    plt.close(fig)
+    print("Chart saved as evaluation_chart.png")
 
 if __name__ == "__main__":
     scores = run_evaluator(10)
-
-    plot_results(scores)
+    plot_results(scores)    

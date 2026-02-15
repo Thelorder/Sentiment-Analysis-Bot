@@ -58,7 +58,7 @@ def get_status() -> Dict[str, str]:
 def predict(request: SentimentRequest) -> SentimentResponse:
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
-
+        
     if request.model and request.model != sentiment_engine.active_name:
         sentiment_engine.set_model(request.model)
 
@@ -69,39 +69,20 @@ def predict(request: SentimentRequest) -> SentimentResponse:
         "confidence": result["confidence"],
         "model_used": sentiment_engine.active_name  
     }
-
+    
 @app.post("/compare", response_model=ComparisonResponse)
 def compare_all(request: SentimentRequest) -> ComparisonResponse:
-    """
-    The 'Battle' Endpoint.
-    Runs the input text against ALL available models to see who wins.
-    """
-    text = request.text
+    """Runs input against ALL models using the central engine."""
+    text =request.text
     results = {}
-
-    results[sentiment_engine.active_name] = sentiment_engine.predict_detailed(text)
-
-    if sentiment_engine.active_name != "vader":
-        from nltk.sentiment.vader import SentimentIntensityAnalyzer
-        vader = SentimentIntensityAnalyzer()
-        v_score = vader.polarity_scores(text)['compound']
-        results["vader"] = {
-            "sentiment": "positive" if v_score >= 0.05 else "negative",
-            "confidence": round(abs(v_score) * 100, 2)
-        }
-
-    if sentiment_engine.active_name != "textblob":
-        from textblob import TextBlob
-        t_blob = TextBlob(text)
-        t_pol = t_blob.sentiment.polarity
-        results["textblob"] = {
-            "sentiment": "positive" if t_pol > 0 else "negative",
-            "confidence": round(abs(t_pol) * 100, 2)
-        }
-
+    
+    for model_name in ["vader", "textblob", "roberta"]:
+        sentiment_engine.set_model(model_name)
+        results[model_name] = sentiment_engine.predict_detailed(text)
+    
     return {
         "input_text": text,
-        "results": results
+        "results": results     
     }
     
 if __name__ == "__main__":
